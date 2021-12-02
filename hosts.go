@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"os/exec"
 	"runtime"
 	"strings"
 )
@@ -46,7 +47,7 @@ func replaceHosts(github []byte) {
 	}
 	f, err := os.OpenFile(hostsfile, os.O_RDWR, 0666)
 	if err != nil {
-		fmt.Println("open hosts err", err)
+		fmt.Println("open hosts file err", err)
 		return
 	}
 	defer f.Close()
@@ -74,4 +75,26 @@ func replaceHosts(github []byte) {
 		return
 	}
 	fmt.Println("replace github hosts done.")
+	flushDNS()
+}
+
+func flushDNS() {
+	exe, args := "ls", []string{}
+	switch runtime.GOOS {
+	case "windows":
+		exe = "ipconfig"
+		args = []string{"/flushdns"}
+	case "linux":
+		exe = "/etc/init.d/networking"
+		args = []string{"restart"}
+	case "darwin":
+		exe = "killall"
+		args = []string{"-HUP", "mDNSResponder"}
+	}
+	cmd := exec.Command(exe, args...)
+	if err := cmd.Run(); err != nil {
+		fmt.Println("flush dns cache err", err)
+		return
+	}
+	fmt.Println("flush dns cache done.")
 }
