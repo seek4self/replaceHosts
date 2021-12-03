@@ -14,13 +14,15 @@ var (
 	interval   = "2h"
 )
 
-func main() {
+func init() {
 	flag.StringVar(&domain, "d", domain, "domain in hosts")
 	flag.StringVar(&newhost, "H", newhost, "domain host")
 	flag.BoolVar(&githubOnce, "one", githubOnce, "replace github hosts once")
 	flag.StringVar(&interval, "i", interval, "replace interval, 'h' is hour, 'm' is minute")
 	flag.Parse()
+}
 
+func main() {
 	if githubOnce {
 		replaceHosts(getHosts())
 		return
@@ -35,6 +37,7 @@ func main() {
 		return
 	}
 
+	// start cron job
 	c := cron.New()
 	c.AddFunc("@every "+interval, func() { replaceHosts(getHosts()) })
 	c.Start()

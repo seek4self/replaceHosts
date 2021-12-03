@@ -89,7 +89,7 @@ func replaceHosts(hosts []byte) {
 
 func findTarget(line string) (bool, string) {
 	target, host := githubStart, ""
-	if target != "github" {
+	if domain != "github" {
 		target = domain
 		host = strings.Split(line, " ")[0]
 	}
