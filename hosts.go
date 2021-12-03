@@ -27,6 +27,18 @@ func hostsFile() string {
 	return hostsfile
 }
 
+func replaceGithub() {
+	replaceHosts(getHosts())
+}
+
+func replaceDomain() {
+	if newhost == "0" {
+		fmt.Println("Non-github domain requires '-H' host parameter ")
+		return
+	}
+	replaceHosts([]byte(newhost + " " + domain + "\n"))
+}
+
 func getHosts() []byte {
 	resp, err := http.Get("https://gitee.com/ineo6/hosts/raw/master/hosts")
 	if err != nil {
