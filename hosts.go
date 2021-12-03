@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"os"
 	"os/exec"
@@ -32,27 +33,30 @@ func replaceGithub() {
 }
 
 func replaceDomain() {
-	if newhost == "0" {
+	if !disableDomain && newhost == "0" {
 		fmt.Println("Non-github domain requires '-H' host parameter ")
 		return
 	}
-	replaceHosts([]byte(newhost + " " + domain + "\n"))
+	replaceHosts([]byte(fmt.Sprintf("%-18s %s\n", newhost, domain)))
 }
 
 func getHosts() []byte {
+	if disableDomain {
+		return []byte{}
+	}
 	resp, err := http.Get("https://gitee.com/ineo6/hosts/raw/master/hosts")
 	if err != nil {
-		fmt.Println("get github hosts from gitee err", err)
-		fmt.Println("please check gitee: https://gitee.com/ineo6/hosts")
+		log.Println("get github hosts from gitee err", err)
+		log.Fatalln("please check gitee: https://gitee.com/ineo6/hosts")
 		return nil
 	}
 	defer resp.Body.Close()
 	hosts, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		fmt.Println("read github hosts body err", err)
+		log.Fatalln("read github hosts body err", err)
 		return nil
 	}
-	fmt.Println("get github hosts ok")
+	log.Println("get github hosts ok")
 	// fmt.Println(string(hosts))
 	// fmt.Println()
 	return hosts
@@ -64,25 +68,40 @@ func replaceHosts(hosts []byte) {
 	}
 	f, err := os.OpenFile(hostsFile(), os.O_RDWR, 0666)
 	if err != nil {
-		fmt.Println("open hosts file err", err)
+		log.Fatalln("open hosts file err", err)
 		return
 	}
+	defer flushDNS()
 	defer f.Close()
 	r := bufio.NewReader(f)
 	pos, action, change := 0, "replace", ""
 	for {
 		line, err := r.ReadString('\n')
 		if err != nil {
-			if err == io.EOF {
-				fmt.Printf("not found '%s' hosts, writing ...\n", domain)
-				action = "write"
-				break
+			if err != io.EOF {
+				log.Fatalln("read hosts file err", err)
+				return
 			}
-			fmt.Println("read hosts file err", err)
-			return
+			if disableDomain {
+				log.Println("disable github hosts done.")
+				return
+			}
+			fmt.Printf("not found '%s' hosts, writing ...\n", domain)
+			action = "write"
+			break
 		}
+
 		if ok, host := findTarget(line); ok {
-			fmt.Printf("found '%s' hosts, replacing ...\n", domain)
+			if disableDomain {
+				log.Printf("disable github host: %s", line)
+				if n, err := f.WriteAt(commentDomain(line), int64(pos)); n <= 0 {
+					log.Fatalln("disable github hosts err", err)
+					return
+				}
+				pos += len(line)
+				continue
+			}
+			log.Printf("found '%s' hosts, replacing ...\n", domain)
 			if host != "" {
 				change = fmt.Sprintf("'%s' -> '%s' ", host, newhost)
 			}
@@ -90,16 +109,32 @@ func replaceHosts(hosts []byte) {
 		}
 		pos += len(line)
 	}
-	n, err := f.WriteAt(hosts, int64(pos))
-	if n <= 0 {
-		fmt.Println("write hosts err", err)
+
+	if n, err := f.WriteAt(hosts, int64(pos)); n <= 0 {
+		log.Fatalln(action, "hosts err", err)
 		return
 	}
-	fmt.Printf("%s '%s' hosts %sdone.\n", action, domain, change)
-	flushDNS()
+	log.Printf("%s '%s' hosts %sdone.\n", action, domain, change)
+}
+
+func commentDomain(line string) []byte {
+	pos := strings.IndexByte(line, byte(' '))
+	data := []byte(line)
+	for i := pos + 1; i > 1; i-- {
+		data[i] = data[i-2]
+	}
+	data[0] = byte('#')
+	data[1] = byte(' ')
+	return data
 }
 
 func findTarget(line string) (bool, string) {
+	if disableDomain {
+		if strings.HasPrefix(line, "#") {
+			return false, ""
+		}
+		return strings.Contains(line, domain), ""
+	}
 	target, host := githubStart, ""
 	if domain != "github" {
 		target = domain
@@ -123,8 +158,8 @@ func flushDNS() {
 	}
 	cmd := exec.Command(exe, args...)
 	if err := cmd.Run(); err != nil {
-		fmt.Println("flush dns cache err", err)
+		log.Fatalln("flush DNS cache err", err)
 		return
 	}
-	fmt.Println("flush dns cache done.")
+	log.Println("flush DNS cache done.")
 }
