@@ -19,10 +19,19 @@ const (
 	githubStart = "# GitHub Host Start"
 )
 
+func hostsFile() string {
+	hostsfile := unixHosts
+	if runtime.GOOS == "windows" {
+		hostsfile = winHosts
+	}
+	return hostsfile
+}
+
 func getHosts() []byte {
 	resp, err := http.Get("https://gitee.com/ineo6/hosts/raw/master/hosts")
 	if err != nil {
-		fmt.Println("get github hosts err", err)
+		fmt.Println("get github hosts from gitee err", err)
+		fmt.Println("please check gitee: https://gitee.com/ineo6/hosts")
 		return nil
 	}
 	defer resp.Body.Close()
@@ -31,51 +40,60 @@ func getHosts() []byte {
 		fmt.Println("read github hosts body err", err)
 		return nil
 	}
-	fmt.Println("get github hosts ok:")
-	fmt.Println(string(hosts))
-	fmt.Println()
+	fmt.Println("get github hosts ok")
+	// fmt.Println(string(hosts))
+	// fmt.Println()
 	return hosts
 }
 
-func replaceHosts(github []byte) {
-	if github == nil {
+func replaceHosts(hosts []byte) {
+	if hosts == nil {
 		return
 	}
-	hostsfile := unixHosts
-	if runtime.GOOS == "windows" {
-		hostsfile = winHosts
-	}
-	f, err := os.OpenFile(hostsfile, os.O_RDWR, 0666)
+	f, err := os.OpenFile(hostsFile(), os.O_RDWR, 0666)
 	if err != nil {
 		fmt.Println("open hosts file err", err)
 		return
 	}
 	defer f.Close()
 	r := bufio.NewReader(f)
-	pos := 0
+	pos, action, change := 0, "replace", ""
 	for {
 		line, err := r.ReadString('\n')
 		if err != nil {
 			if err == io.EOF {
-				fmt.Println("not found github hosts, writing ...")
+				fmt.Printf("not found '%s' hosts, writing ...\n", domain)
+				action = "write"
 				break
 			}
-			fmt.Println("read hosts err", err)
+			fmt.Println("read hosts file err", err)
 			return
 		}
-		if strings.Contains(line, githubStart) {
-			fmt.Println("found github hosts, replacing ...")
+		if ok, host := findTarget(line); ok {
+			fmt.Printf("found '%s' hosts, replacing ...\n", domain)
+			if host != "" {
+				change = fmt.Sprintf("'%s' -> '%s' ", host, newhost)
+			}
 			break
 		}
 		pos += len(line)
 	}
-	n, err := f.WriteAt(github, int64(pos))
+	n, err := f.WriteAt(hosts, int64(pos))
 	if n <= 0 {
 		fmt.Println("write hosts err", err)
 		return
 	}
-	fmt.Println("replace github hosts done.")
+	fmt.Printf("%s '%s' hosts %sdone.\n", action, domain, change)
 	flushDNS()
+}
+
+func findTarget(line string) (bool, string) {
+	target, host := githubStart, ""
+	if target != "github" {
+		target = domain
+		host = strings.Split(line, " ")[0]
+	}
+	return strings.Contains(line, target), host
 }
 
 func flushDNS() {
