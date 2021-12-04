@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -21,11 +20,10 @@ const (
 )
 
 func hostsFile() string {
-	hostsfile := unixHosts
 	if runtime.GOOS == "windows" {
-		hostsfile = winHosts
+		return winHosts
 	}
-	return hostsfile
+	return unixHosts
 }
 
 func replaceGithub() {
@@ -51,7 +49,7 @@ func getHosts() []byte {
 		return nil
 	}
 	defer resp.Body.Close()
-	hosts, err := ioutil.ReadAll(resp.Body)
+	hosts, err := io.ReadAll(resp.Body)
 	if err != nil {
 		log.Fatalln("read github hosts body err", err)
 		return nil
@@ -74,9 +72,11 @@ func replaceHosts(hosts []byte) {
 	defer flushDNS()
 	defer f.Close()
 	r := bufio.NewReader(f)
-	pos, action, change := 0, "replace", ""
+	pos, line := 0, ""
+	action, change := "replace", ""
 	for {
-		line, err := r.ReadString('\n')
+		pos += len(line)
+		line, err = r.ReadString('\n')
 		if err != nil {
 			if err != io.EOF {
 				log.Fatalln("read hosts file err", err)
@@ -98,7 +98,6 @@ func replaceHosts(hosts []byte) {
 					log.Fatalln("disable github hosts err", err)
 					return
 				}
-				pos += len(line)
 				continue
 			}
 			log.Printf("found '%s' hosts, replacing ...\n", domain)
@@ -107,7 +106,6 @@ func replaceHosts(hosts []byte) {
 			}
 			break
 		}
-		pos += len(line)
 	}
 
 	if n, err := f.WriteAt(hosts, int64(pos)); n <= 0 {
@@ -130,7 +128,7 @@ func commentDomain(line string) []byte {
 
 func findTarget(line string) (bool, string) {
 	if disableDomain {
-		if strings.HasPrefix(line, "#") {
+		if len(line) == 0 || line[0] == '#' {
 			return false, ""
 		}
 		return strings.Contains(line, domain), ""
@@ -156,8 +154,7 @@ func flushDNS() {
 		exe = "killall"
 		args = []string{"-HUP", "mDNSResponder"}
 	}
-	cmd := exec.Command(exe, args...)
-	if err := cmd.Run(); err != nil {
+	if err := exec.Command(exe, args...).Run(); err != nil {
 		log.Fatalln("flush DNS cache err", err)
 		return
 	}
