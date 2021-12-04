@@ -4,7 +4,10 @@ The tool to replace the local hosts. Regularly pull github hosts from [ineo6/hos
 
 ## usage
 
-```bash
+> **Notice**: Running this software under Windows environment will be blocked by Microsoft Defender or anti-virus software. Please add this software to the trust list or white list.  
+> **MUST** be run as administrator or `sudo`
+
+```text
 The tool to replace the local hosts.
 Version: v1.0.0
 Usage of ./replacer:
