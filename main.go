@@ -62,7 +62,7 @@ func main() {
 	}
 
 	replaceGithub()
-	if githubOnce {
+	if githubOnce || disableDomain {
 		return
 	}
 	// start cron job
