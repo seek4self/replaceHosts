@@ -6,12 +6,12 @@
 [![GitHub](https://img.shields.io/github/license/seek4self/replaceHosts)](https://github.com/seek4self/replaceHosts/blob/master/LICENSE)
 [![GitHub release (latest by date)](https://img.shields.io/github/v/release/seek4self/replaceHosts?display_name=tag)](https://github.com/seek4self/replaceHosts/releases)
 
-The tool to replace the local hosts. Regularly pull github hosts from [ineo6/hosts](https://github.com/ineo6/hosts) and update to local hosts
+一个替换本地 hosts 的工具。 定期从 [ineo6/hosts](https://github.com/ineo6/hosts) 仓库拉取 github hosts 并更新到本地 hosts。
 
 ## usage
 
-> **Notice**: Running this software under Windows environment will be blocked by Microsoft Defender or anti-virus software. Please add this software to the trust list or white list.  
-> **MUST** be run as administrator or `sudo`
+> **注意**: 在 Windows 环境中运行该软件会被 Microsoft Defender 或者杀毒软件拦截并隔离，请将该软件添加到信任列表或者白名单中。
+> **必须**使用管理员或 `sudo` 身份运行该软件
 
 ```text
 The tool to replace the local hosts.
@@ -33,6 +33,6 @@ Usage of ./replacer:
 ## changelog
 
 - v1.0.0
-  - pull remote github hosts and update local hosts
-  - disable hosts
-  - update singal domain
+  - 拉取远端 github hosts 并更新到本地 hosts
+  - 禁用 hosts
+  - 更新单个域名 host
