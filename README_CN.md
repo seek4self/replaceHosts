@@ -10,17 +10,18 @@
 
 ## usage
 
-> **注意**: 在 Windows 环境中运行该软件会被 Microsoft Defender 或者杀毒软件拦截并隔离，请将该软件添加到信任列表或者白名单中。
+> **注意**: 在 Windows 环境中运行该软件会被 Microsoft Defender 或者杀毒软件拦截并隔离，请将该软件添加到信任列表或者白名单中。  
 > **必须**使用管理员或 `sudo` 身份运行该软件
 
 ```text
 The tool to replace the local hosts.
 Version: v1.0.0
 Usage of ./replacer:
-  -H string
-        the new host ip for the '-d'(input domain) flag. (default "0")
-  -d string
+  -D string
         domain in local hosts. (default "github")
+  -H string
+        the new host ip for the '-D'(input domain) flag. (default "0")
+  -d    run app as a daemon.
   -dd
         disable domain hosts.
   -i string

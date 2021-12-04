@@ -17,10 +17,11 @@ The tool to replace the local hosts. Regularly pull github hosts from [ineo6/hos
 The tool to replace the local hosts.
 Version: v1.0.0
 Usage of ./replacer:
-  -H string
-        the new host ip for the '-d'(input domain) flag. (default "0")
-  -d string
+  -D string
         domain in local hosts. (default "github")
+  -H string
+        the new host ip for the '-D'(input domain) flag. (default "0")
+  -d    run app as a daemon.
   -dd
         disable domain hosts.
   -i string
