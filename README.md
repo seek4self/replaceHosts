@@ -13,9 +13,10 @@ The tool to replace the local hosts. Regularly pull github hosts from [ineo6/hos
 > **Notice**: Running this software under Windows environment will be blocked by Microsoft Defender or anti-virus software. Please add this software to the trust list or white list.  
 > **MUST** be run as administrator or `sudo`
 
-```text
+```bash
+$ ./replacer -h
 The tool to replace the local hosts.
-Version: v1.0.0
+Version: v1.0.1
 Usage of ./replacer:
   -D string
         domain in local hosts. (default "github")
@@ -30,10 +31,3 @@ Usage of ./replacer:
         replace github hosts once.
   -v    print version.
 ```
-
-## changelog
-
-- v1.0.0
-  - pull remote github hosts and update local hosts
-  - disable hosts
-  - update singal domain

@@ -13,9 +13,10 @@
 > **注意**: 在 Windows 环境中运行该软件会被 Microsoft Defender 或者杀毒软件拦截并隔离，请将该软件添加到信任列表或者白名单中。  
 > **必须**使用管理员或 `sudo` 身份运行该软件
 
-```text
+```bash
+$ ./replacer -h
 The tool to replace the local hosts.
-Version: v1.0.0
+Version: v1.0.1
 Usage of ./replacer:
   -D string
         domain in local hosts. (default "github")
@@ -30,10 +31,3 @@ Usage of ./replacer:
         replace github hosts once.
   -v    print version.
 ```
-
-## changelog
-
-- v1.0.0
-  - 拉取远端 github hosts 并更新到本地 hosts
-  - 禁用 hosts
-  - 更新单个域名 host
