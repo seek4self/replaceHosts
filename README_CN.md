@@ -31,3 +31,5 @@ Usage of ./replacer:
         replace github hosts once.
   -v    print version.
 ```
+
+- [Win10 修改 hosts 写权限](https://www.jb51.net/os/win10/648675.html)

@@ -1,5 +1,11 @@
 # ChangeLog
 
+## v1.0.2
+
+- date: 2021/12/06 23:32
+- content:
+  - pause before exit when err
+
 ## v1.0.1
 
 - date: 2021/12/04 14:58
