@@ -60,26 +60,39 @@ func getHosts() []byte {
 	return hosts
 }
 
+func exitOnWin(print bool) {
+	if runtime.GOOS == "windows" && print {
+		fmt.Printf("\nPress ENTER or Ctrl C to exit ...")
+		b := make([]byte, 1)
+		os.Stdin.Read(b)
+		os.Exit(1)
+	}
+}
+
 func replaceHosts(hosts []byte) {
+	printWin := true
+	defer func() {
+		exitOnWin(printWin)
+	}()
 	if hosts == nil {
 		return
 	}
+
 	f, err := os.OpenFile(hostsFile(), os.O_RDWR, 0666)
 	if err != nil {
-		log.Fatalln("open hosts file err", err)
+		log.Println("open hosts file err", err)
 		return
 	}
 	defer flushDNS()
 	defer f.Close()
 	r := bufio.NewReader(f)
-	pos, line := 0, ""
-	action, change := "replace", ""
+	pos, line, action, change := 0, "", "replace", ""
 	for {
 		pos += len(line)
 		line, err = r.ReadString('\n')
 		if err != nil {
 			if err != io.EOF {
-				log.Fatalln("read hosts file err", err)
+				log.Println("read hosts file err", err)
 				return
 			}
 			if disableDomain {
@@ -95,7 +108,7 @@ func replaceHosts(hosts []byte) {
 			if disableDomain {
 				log.Printf("disable github host: %s", line)
 				if n, err := f.WriteAt(commentDomain(line), int64(pos)); n <= 0 {
-					log.Fatalln("disable github hosts err", err)
+					log.Println("disable github hosts err", err)
 					return
 				}
 				continue
@@ -109,10 +122,11 @@ func replaceHosts(hosts []byte) {
 	}
 
 	if n, err := f.WriteAt(hosts, int64(pos)); n <= 0 {
-		log.Fatalln(action, "hosts err", err)
+		log.Println(action, "hosts err", err)
 		return
 	}
 	log.Printf("%s '%s' hosts %sdone.\n", action, domain, change)
+	printWin = false
 }
 
 func commentDomain(line string) []byte {
